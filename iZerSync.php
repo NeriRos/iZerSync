@@ -35,7 +35,7 @@ class IZerSync extends Module
     public function __construct()
     {
         $this->name = 'iZerSync';
-        $this->tab = 'content_management';
+        $this->tab = 'administration';
         $this->version = '1.0.0';
         $this->author = 'LightX';
         $this->need_instance = 1;
