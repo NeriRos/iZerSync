@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<module>
+	<name>iZerSync</name>
+	<displayName><![CDATA[iZerSync]]></displayName>
+	<version><![CDATA[1.0.0]]></version>
+	<description><![CDATA[synchronize prestashop with iZer system. ]]></description>
+	<author><![CDATA[LightX]]></author>
+	<tab><![CDATA[content_management]]></tab>
+	<is_configurable>1</is_configurable>
+	<need_instance>1</need_instance>
+</module>
