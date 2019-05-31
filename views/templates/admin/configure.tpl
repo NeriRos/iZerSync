@@ -24,22 +24,9 @@
 *}
 
 <div class="panel">
-	<h3><i class="icon icon-credit-card"></i> {l s='iZerSync' mod='iZerSync'}</h3>
+	<h3><i class="icon icon-tags"></i> {l s='Log' mod='iZerSync'}</h3>
 	<p>
-		<strong>{l s='Here is my new generic module!' mod='iZerSync'}</strong><br />
-		{l s='Thanks to PrestaShop, now I have a great module.' mod='iZerSync'}<br />
-		{l s='I can configure it using the following configuration form.' mod='iZerSync'}
-	</p>
-	<br />
-	<p>
-		{l s='This module will boost your sales!' mod='iZerSync'}
-	</p>
-</div>
-
-<div class="panel">
-	<h3><i class="icon icon-tags"></i> {l s='Documentation' mod='iZerSync'}</h3>
-	<p>
-		&raquo; {l s='You can get a PDF documentation to configure this module' mod='iZerSync'} :
+		&raquo; {l s='View debug log' mod='iZerSync'} :
 		<ul>
 			<li><a href="#" target="_blank">{l s='English' mod='iZerSync'}</a></li>
 			<li><a href="#" target="_blank">{l s='French' mod='iZerSync'}</a></li>

@@ -244,9 +244,14 @@ class IZerSync extends Module
         /* Place your code here. */
     }
 
-    public function hookActionProductAdd()
+    public function hookActionProductAdd($params)
     {
+        $test = "testing!";
         /* Place your code here. */
+        echo "<script>console.log('$test')</script>";
+        print_r($params['product']);
+        file_put_contents("./test.txt", "test");
+        die();
     }
 
     public function hookActionProductDelete()
