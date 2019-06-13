@@ -68,13 +68,11 @@ class IZerSync extends Module
         return parent::install() &&
             $this->registerHook('header') &&
             $this->registerHook('backOfficeHeader') &&
-            $this->registerHook('actionOrderDetail') &&
-            $this->registerHook('actionOrderSlipAdd') &&
+            $this->registerHook('displayHome') &&
             $this->registerHook('actionOrderStatusUpdate') &&
             $this->registerHook('actionProductAdd') &&
             $this->registerHook('actionProductDelete') &&
-            $this->registerHook('actionProductUpdate') &&
-            $this->registerHook('actionValidateOrder');
+            $this->registerHook('actionProductUpdate');
     }
 
     public function uninstall()
@@ -229,43 +227,163 @@ class IZerSync extends Module
         $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
 
-    public function hookActionOrderDetail()
+    public function hookActionOrderStatusUpdate($params)
     {
-        /* Place your code here. */
-    }
+        $statusId = $params['newOrderStatus']->id;
 
-    public function hookActionOrderSlipAdd()
-    {
-        /* Place your code here. */
-    }
+        $order = new Order((int)$params['id_order']);
+        $cart = new Cart((int)$order->id_cart);
+        
+        $statusName = array_values((new OrderState($statusId))->name)[0];
+        
+        $deliveryAddress = new Address(intval($cart->id_address_delivery));
+        $invoiceAddress = new Address(intval($cart->id_address_invoice));
+        
+        $deliveryCustomer = new Customer((int)($deliveryAddress->id_customer));
+        $invoiceCustomer = new Customer((int)($invoiceAddress->id_customer));
 
-    public function hookActionOrderStatusUpdate()
-    {
-        /* Place your code here. */
+        $deliveryDateTime = Db::getInstance()->getValue("SELECT delivery_date FROM ps_orders WHERE id_order = $params[id_order]");
+        $deliveryDate = strtotime(explode(" ", $deliveryDateTime)[0]);
+        $deliveryTime = strtotime(explode(" ", $deliveryDateTime)[1]);
+        
+        $items = $cart->getProducts(true);
+
+        $data = [
+            'order' => [
+                'created_at' => date("d/m/y") . ' ' . date('G:i:s',  time()),
+                'id' => $params['id_order'],
+                'order_number' => $params['id_order'],
+                'shipping_date' => date("d/m/y", $deliveryDate),
+                'shipping_time' => date('G:i', $deliveryTime) . '-' . date('G:i', $deliveryTime + 60*60*4),
+                'greeting' => 'שבשגבגבגב',
+                'note' => '',
+                'status' => $statusName,
+                'total' => $order->total_paid_tax_incl,
+                'total_shipping' => $order->total_shipping,
+                'billing_address' => [
+                    'first_name' => $invoiceAddress->firstname,
+                    'last_name' => $invoiceAddress->lastname, 
+                    'email' => $invoiceCustomer->email,
+                    'phone' => $invoiceAddress->phone
+                ],
+                'shipping_address' => [
+                    'recipient_name' => $deliveryAddress->firstname . " " . $deliveryAddress->lastname,
+                    'phone' => $deliveryAddress->phone,
+                    'phone2' => $deliveryAddress->phone,
+                    'city' => $deliveryAddress->city,
+                    'address_1' => $deliveryAddress->address1,
+                    'address_2' => $deliveryAddress->address2,
+                    'street_number' => $deliveryAddress->address1,
+                    'entrance' => $deliveryAddress->address1,
+                    'appartment' => $deliveryAddress->address1,
+                    'floor' => $deliveryAddress->address1
+                ],
+                'line_items' => $items
+            ]
+        ];
+
+        $this->sendFromPHP($data, "order");
+        die();
     }
 
     public function hookActionProductAdd($params)
     {
-        $test = "testing!";
-        /* Place your code here. */
-        echo "<script>console.log('$test')</script>";
-        print_r($params['product']);
-        file_put_contents("./test.txt", "test");
-        die();
+        $product = $params['product'];
+        $category = new Category((int)$product->id_category_default, (int)$this->context->language->id);
+
+        $data = [
+            'title' => implode($product->name),
+            'catalog_number' => $product->reference,
+            'short_description' => implode($product->description_short),
+            'regular_price' => $product->price,
+            'sale_price'  => $product->price,
+            'type' => 'simple',
+            'id' => $product->id,
+            'variations' => [],
+            'category' => $category->name
+        ];
+
+        $this->sendFromPHP($data, "product");
     }
 
-    public function hookActionProductDelete()
+    public function hookActionProductDelete($params)
     {
-        /* Place your code here. */
+        $product = $params['product'];
+        $category = new Category((int)$product->id_category_default, (int)$this->context->language->id);
+
+        $data = [
+            'title' => implode($product->name),
+            'catalog_number' => $product->reference,
+            'short_description' => implode($product->description_short),
+            'regular_price' => $product->price,
+            'sale_price' => $product->price,
+            'type' => 'simple',
+            'id' => $product->id,
+            'variations' => [],
+            'category' => $category->name
+        ];
+
+        $this->sendFromPHP($data, "product_remove");
     }
 
-    public function hookActionProductUpdate()
+    public function hookActionProductUpdate($params)
     {
-        /* Place your code here. */
+        $product = $params['product'];
+        $category = new Category((int)$product->id_category_default, (int)$this->context->language->id);
+
+        $data = [
+            'title' => implode($product->name),
+            'catalog_number' => $product->reference,
+            'short_description' => implode($product->description_short),
+            'regular_price' => $product->price,
+            'sale_price' => $product->price,
+            'type' => 'simple',
+            'id' => $product->id,
+            'variations' => [],
+            'category' => $category->name
+        ];
+
+        $this->sendFromPHP($data, "product");
     }
 
-    public function hookActionValidateOrder()
-    {
-        /* Place your code here. */
+    public function sendFromPHP($data, $api) {
+        $url = "https://izer.co.il/crm/" . $api . "_api.php"; // "presta.lightx.co.il/testIzer.php"; //  
+        
+        if ($api == "order") {
+            $data["order"]["site_url"] = "http://www.sadeflowers.co.il";
+            $data["order"]["izer_key"] = "57c781e8f0d2b1ce3a4104c2d3b51676";
+            $data["order"]["created_at"] = date('TH:i:sY-m-d');
+        } else {
+            $data["site_url"] = "http://www.sadeflowers.co.il";
+            $data["izer_key"] = "57c781e8f0d2b1ce3a4104c2d3b51676";
+            $data["created_at"] = date('TH:i:sY-m-d');
+        }
+
+        $this->debugConsole("data", $data);
+
+        $dataJson = json_encode($data);  
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $dataJson);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array(                                                                          
+            'Content-Type: application/json',                                                                                
+            'Content-Length: ' . strlen($dataJson))                                                                       
+        );  
+
+        $server_output = curl_exec($ch);
+
+        curl_close ($ch);
+        ppp($server_output);
+        echo "<script> console.log('izer response:', '" . $server_output . "'); </script>";
+    }
+
+    public function debugConsole($label, $data) {
+        echo "$label :";
+        ppp($data);
+        echo "<script> console.log('" . $label . "', JSON.parse('" . json_encode($data) . "')); </script>";
     }
 }

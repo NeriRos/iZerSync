@@ -24,12 +24,12 @@
 *}
 
 <div class="panel">
-	<h3><i class="icon icon-tags"></i> {l s='Log' mod='iZerSync'}</h3>
+	{* <h3><i class="icon icon-tags"></i> {l s='Log' mod='iZerSync'}</h3>
 	<p>
 		&raquo; {l s='View debug log' mod='iZerSync'} :
 		<ul>
 			<li><a href="#" target="_blank">{l s='English' mod='iZerSync'}</a></li>
 			<li><a href="#" target="_blank">{l s='French' mod='iZerSync'}</a></li>
 		</ul>
-	</p>
+	</p> *}
 </div>
